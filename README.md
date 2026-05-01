@@ -4,11 +4,14 @@
 
 ## Use
 
-Makes it so that the kaiju you've picked in your save remains in the background of the house, even after unlocking the Rift!
+Makes it so that a kaiju is always present in the background of the house, even on a fresh save and after unlocking the Rift!
 
 This mod only affects rendering logic, and should have no permanent effects on a save.
 
-If the dll file is renamed from `kaiju_4ever.dll` to `kaiju_never.dll`, this mod will instead prevent kaiju from appearing behind the house. However, if you do this, you'll be as evil as a Team Rocket grunt!
+Three downloads are provided for convenience, differing in a text value stored in `config.txt`. Only one should be loaded at a given time.
+* Pyrophina fans should download *-kaiju_4ever_pyrophina.zip, which forces Pyrophina to always appear.
+* Zaratana fans should download *-kaiju_4ever_zaratana.zip, which forces Zaratana to always appear.
+* Team Rocket fans could download *-kaiju_never.zip, which instead prevents any kaiju from appearing behind the house.
 
 ## Installation requirements
 

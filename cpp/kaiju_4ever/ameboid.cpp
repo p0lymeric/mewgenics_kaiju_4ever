@@ -6,6 +6,8 @@
 #include "utilities/portal.hpp"
 #include "utilities/stopwatch.hpp"
 
+#include <fstream>
+
 #include <windows.h>
 
 #include "detours.h"
@@ -58,17 +60,32 @@ AmeboidErrorCode on_attach() {
     // Create a Win32 console window with which to print log messages. ENABLE_CONSOLE_LOGGING disables this for public release.
     ALLOC_CONSOLE();
 
-    // Show or hide the kaiju, based on the dll's file name.
+    // Show or hide the kaiju based on the contents of a simple text file
     // (hacky configuration system)
     std::filesystem::path dll_path = get_module_file_path(reinterpret_cast<HMODULE>(G.dll_base_va));
     std::string dll_stem = dll_path.stem().string();
     G.config_true_to_hide_kaiju_false_to_show_kaiju = false;
-    if(dll_stem.find("never") != std::string::npos) {
-        // *gasp*, how could you!
-        G.config_true_to_hide_kaiju_false_to_show_kaiju = true;
+    G.config_true_for_zaratana_false_for_pyrophina = false;
+    {
+        std::ifstream simple_config_file(dll_path.parent_path() / "config.txt");
+        if(simple_config_file.is_open()) {
+            std::string first_line;
+            std::getline(simple_config_file, first_line);
+            if(first_line.find("never") != std::string::npos) {
+                // *gasp*, how could you!
+                G.config_true_to_hide_kaiju_false_to_show_kaiju = true;
+            }
+            if(first_line.find("zaratana") != std::string::npos) {
+                G.config_true_for_zaratana_false_for_pyrophina = true;
+            }
+            // otherwise pyrophina will be shown
+        }
+        simple_config_file.close();
     }
 
     D::info("Initializing {} version {}", MOD_NAME, MOD_VERSION);
+    D::info("config_true_to_hide_kaiju_false_to_show_kaiju: {}", G.config_true_to_hide_kaiju_false_to_show_kaiju);
+    D::info("config_true_for_zaratana_false_for_pyrophina: {}", G.config_true_for_zaratana_false_for_pyrophina);
     // D::info("Hook base VA: 0x{:x}", G.dll_base_va);
     // D::info("Hook mapped size: 0x{:x}\n", G.dll_image_size);
     // D::info("Executable base VA: 0x{:x}", host_exec_base_va);

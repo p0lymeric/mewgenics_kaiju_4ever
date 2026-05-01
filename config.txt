@@ -1,0 +1,5 @@
+pyrophina
+// Valid values for the above line are: "pyrophina", "zaratana", or "never"
+// "pyrophina": forces Pyrophina to always appear.
+// "zaratana": forces Zaratana to always appear.
+// "never": prevents any kaiju from appearing behind the house.
