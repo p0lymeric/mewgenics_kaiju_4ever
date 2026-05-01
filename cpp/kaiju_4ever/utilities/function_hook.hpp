@@ -337,10 +337,18 @@ public:
             #ifdef SUPPORT_MEWJECTOR_HOOK_IMPL
             case EFunctionHookProvider::Mewjector:
                 if(const MewjectorAPI *mj = MJ_SUPPORT_GetAPI(); mj != NULL) {
-                    // NB: MJ doesn't adjust any RIP-relative instructions, if any were to exist in the stolen region
+                    // Versions of Mewjector prior to v3.1 required an externally calculated value for stolenBytes
+                    const size_t MIN_BYTES_TO_STEAL = 14;
+                    uintptr_t target_start = reinterpret_cast<uintptr_t>(this->target);
+                    uintptr_t target_end_of_stolen_region = target_start;
+                    while(target_end_of_stolen_region - target_start < MIN_BYTES_TO_STEAL) {
+                        PVOID target_end_of_stolen_region_void = DetourCopyInstruction(NULL, NULL, reinterpret_cast<PVOID>(target_end_of_stolen_region), NULL, NULL);
+                        target_end_of_stolen_region = reinterpret_cast<uintptr_t>(target_end_of_stolen_region_void);
+                    }
+                    int bytes_to_steal = static_cast<int>(target_end_of_stolen_region - target_start);
                     if(mj->InstallHook(
                         reinterpret_cast<UINT_PTR>(this->target) - reinterpret_cast<UINT_PTR>(GetModuleHandle(NULL)),
-                        0,
+                        bytes_to_steal,
                         reinterpret_cast<void *>(this->detour),
                         reinterpret_cast<void **>(&this->orig),
                         10,
