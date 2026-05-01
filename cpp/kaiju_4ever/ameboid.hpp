@@ -15,7 +15,7 @@
 inline constexpr char MOD_AUTHOR[] = "polymeric";
 inline constexpr char MOD_NAME[] = "Kaiju 4Ever";
 inline constexpr char MOD_URL[] = "https://github.com/p0lymeric/mewgenics_kaiju_4ever";
-inline constexpr char MOD_VERSION[] = "1.0.0";
+inline constexpr char MOD_VERSION[] = "1.0.1";
 
 // These signatures were extracted from Mewgenics.exe
 
