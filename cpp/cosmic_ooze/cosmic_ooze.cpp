@@ -1,4 +1,4 @@
-#define ENABLE_DEBUG_CONSOLE
+// #define ENABLE_DEBUG_CONSOLE
 
 #include <string>
 #include <format>
