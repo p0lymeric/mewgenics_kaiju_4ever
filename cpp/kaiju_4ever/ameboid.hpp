@@ -24,6 +24,7 @@ inline constexpr const auto ADDRESS_maybe_get_sql_properties_int64 = DirectSig::
 inline constexpr const auto ADDRESS_glaiel__BackgroundKaiju__unlocked_update = DirectSig::make<"48 89 5C 24 18 55 56 57 48 83 EC 70 0F 29 74 24 60 48 8B F9 48 8B 41 28 F2 0F 10 48 28 F2 0F 59 49 78">(0);
 
 // Data offsets are encoded as relative VAs
+inline constexpr const auto DATAOFF_glaiel__MewDirector__p_singleton = IndirectSig::make<"48 89 5C 24 10 48 89 4C 24 08 57 48 83 EC 40 48 8B CA 48 8B 05 ?? ?? ?? ?? 48 8B B8 A8 05 00 00">(21, 4, true, true);
 
 // TLS variable offsets are encoded relative to the base VA of their TLS slot
 
