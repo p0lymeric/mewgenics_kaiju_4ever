@@ -1,5 +1,8 @@
 #pragma once
 
+#include "utilities/memory.hpp" // IWYU pragma: keep
+
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -23,7 +26,7 @@
 
 #define MAKE_TPORTAL(slot, offset, type, name)\
     static type &name() { \
-        uint8_t *p_target = reinterpret_cast<uint8_t **>(__readgsqword(0x58))[slot] + offset; \
+        uint8_t *p_target = get_tls_base(slot) + offset; \
         return *reinterpret_cast<type *>(p_target); \
     }
 
@@ -42,7 +45,7 @@
 #define MAKE_STPORTAL(slot, sig, type, name) \
     static SigPortalDescriptor<type *, true, decltype(sig)> name##_pd(sig); \
     static type &name() { \
-        uint8_t *p_target = reinterpret_cast<uint8_t **>(__readgsqword(0x58))[slot] + reinterpret_cast<size_t>(name##_pd.target); \
+        uint8_t *p_target = get_tls_base(slot) + reinterpret_cast<size_t>(name##_pd.target); \
         return *reinterpret_cast<type *>(p_target); \
     }
 

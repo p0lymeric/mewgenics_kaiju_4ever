@@ -48,7 +48,7 @@ struct GlobalContext {
     uintptr_t host_exec_base_va;
     uintptr_t host_exec_image_size;
 
-    // Whether it is permissible for the dll to self-eject
+    // Whether it is permissible for the dll to self-eject.
     // (false if the dll cannot self-uninstall its hooks)
     bool dll_can_self_eject;
 

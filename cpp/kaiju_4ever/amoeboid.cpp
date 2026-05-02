@@ -22,6 +22,7 @@ GlobalContext G;
 
 enum class AmoeboidErrorCode {
     Success,
+    FailedToResolveSymbol,
     FailedToHook,
     FailedToUnhook,
 };
@@ -33,11 +34,14 @@ std::string get_user_facing_error_message(AmoeboidErrorCode error_code) {
             builder += "A supposedly impossible error occurred where something failed successfully.\n";
             builder += "(but seriously, the author of this mod probably did something very silly if you are seeing this message)\n";
             break;
+        case AmoeboidErrorCode::FailedToResolveSymbol:
+            builder += std::format("A function/data symbol failed to resolve.\n");
+            break;
         case AmoeboidErrorCode::FailedToHook:
-            builder += std::format("A function hook failed to install.\n", MOD_NAME);
+            builder += std::format("A function hook failed to install.\n");
             break;
         case AmoeboidErrorCode::FailedToUnhook:
-            builder += std::format("A function hook failed to uninstall.\n", MOD_NAME);
+            builder += std::format("A function hook failed to uninstall.\n");
             break;
     }
 
@@ -90,17 +94,17 @@ AmoeboidErrorCode on_attach() {
     // D::info("Hook mapped size: 0x{:x}\n", G.dll_image_size);
     // D::info("Executable base VA: 0x{:x}", host_exec_base_va);
     // D::info("Executable mapped size: {}\n", host_exec_image_size);
-    // D::info("Executable SHA-256: {}", G.exe_actual_sha256.has_value() ? hash256bit_to_string(G.exe_actual_sha256.value()) : "<unknown>");
 
+    // Resolve symbols (calculate VAs, do proc lookups, do signature scans)
     {
         MAKE_STOPWATCH_SCOPE(sct, "symbol resolution");
         // Resolve portals (trampolines to functions and data)
         if(!SPortalRegistry::resolve_portals(host_exec_base_va, host_exec_image_size)) {
-            return AmoeboidErrorCode::FailedToHook;
+            return AmoeboidErrorCode::FailedToResolveSymbol;
         }
         // Resolve function hook targets
         if(!SFunctionHookRegistry::resolve_hooks(host_exec_base_va, host_exec_image_size, 0)) {
-            return AmoeboidErrorCode::FailedToHook;
+            return AmoeboidErrorCode::FailedToResolveSymbol;
         }
     }
 
