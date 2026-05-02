@@ -33,14 +33,14 @@ inline constexpr const auto DATAOFF_glaiel__MewDirector__p_singleton = IndirectS
 // CROSS-TU DECLARATIONS
 
 // The "everything" struct
-// Exporter: ameboid.cpp
+// Exporter: amoeboid.cpp
 struct GlobalContext;
 extern GlobalContext G;
 
 // TYPE DECLARATIONS
 
 struct GlobalContext {
-    // ameboid.dll offset.
+    // amoeboid.dll offset.
     uintptr_t dll_base_va;
     uintptr_t dll_image_size;
 

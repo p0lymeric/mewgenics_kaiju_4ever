@@ -1,4 +1,4 @@
-#include "ameboid.hpp"
+#include "amoeboid.hpp"
 #include "utilities/debug_console.hpp"
 #include "utilities/function_hook.hpp"
 #include "utilities/memory.hpp"
@@ -12,7 +12,7 @@
 
 #include "detours.h"
 
-// Ameboid
+// Amoeboid
 //
 // A base DLL implementation for Mewgenics modding.
 //
@@ -20,23 +20,23 @@
 
 GlobalContext G;
 
-enum class AmeboidErrorCode {
+enum class AmoeboidErrorCode {
     Success,
     FailedToHook,
     FailedToUnhook,
 };
 
-std::string get_user_facing_error_message(AmeboidErrorCode error_code) {
+std::string get_user_facing_error_message(AmoeboidErrorCode error_code) {
     std::string builder;
     switch(error_code) {
-        case AmeboidErrorCode::Success:
+        case AmoeboidErrorCode::Success:
             builder += "A supposedly impossible error occurred where something failed successfully.\n";
             builder += "(but seriously, the author of this mod probably did something very silly if you are seeing this message)\n";
             break;
-        case AmeboidErrorCode::FailedToHook:
+        case AmoeboidErrorCode::FailedToHook:
             builder += std::format("A function hook failed to install.\n", MOD_NAME);
             break;
-        case AmeboidErrorCode::FailedToUnhook:
+        case AmoeboidErrorCode::FailedToUnhook:
             builder += std::format("A function hook failed to uninstall.\n", MOD_NAME);
             break;
     }
@@ -49,7 +49,7 @@ std::string get_user_facing_error_message(AmeboidErrorCode error_code) {
     return builder;
 }
 
-AmeboidErrorCode on_attach() {
+AmoeboidErrorCode on_attach() {
     // Actual virtual address where mapped executable begins
     HMODULE host_exec_module = GetModuleHandle(NULL);
     uintptr_t host_exec_base_va = reinterpret_cast<uintptr_t>(host_exec_module);
@@ -67,7 +67,7 @@ AmeboidErrorCode on_attach() {
     G.config_true_to_hide_kaiju_false_to_show_kaiju = false;
     G.config_true_for_zaratana_false_for_pyrophina = false;
     {
-        std::ifstream simple_config_file(dll_path.parent_path() / "config.txt");
+        std::ifstream simple_config_file(dll_path.parent_path() / "kaiju_4ever.txt");
         if(simple_config_file.is_open()) {
             std::string first_line;
             std::getline(simple_config_file, first_line);
@@ -96,11 +96,11 @@ AmeboidErrorCode on_attach() {
         MAKE_STOPWATCH_SCOPE(sct, "symbol resolution");
         // Resolve portals (trampolines to functions and data)
         if(!SPortalRegistry::resolve_portals(host_exec_base_va, host_exec_image_size)) {
-            return AmeboidErrorCode::FailedToHook;
+            return AmoeboidErrorCode::FailedToHook;
         }
         // Resolve function hook targets
         if(!SFunctionHookRegistry::resolve_hooks(host_exec_base_va, host_exec_image_size, 0)) {
-            return AmeboidErrorCode::FailedToHook;
+            return AmoeboidErrorCode::FailedToHook;
         }
     }
 
@@ -111,39 +111,39 @@ AmeboidErrorCode on_attach() {
         if(SFunctionHookRegistry::api_is_present(EFunctionHookProvider::Mewjector)) {
             // Use Mewjector if present for coordinated hooking
             if(!SFunctionHookRegistry::install_hooks(EFunctionHookProvider::Mewjector, 0)) {
-                return AmeboidErrorCode::FailedToHook;
+                return AmoeboidErrorCode::FailedToHook;
             }
             G.dll_can_self_eject = false;
         } else {
             if(!SFunctionHookRegistry::install_hooks(EFunctionHookProvider::Detours, 0)) {
-                return AmeboidErrorCode::FailedToHook;
+                return AmoeboidErrorCode::FailedToHook;
             }
         }
     }
 
-    return AmeboidErrorCode::Success;
+    return AmoeboidErrorCode::Success;
 }
 
-AmeboidErrorCode on_unload_detach() {
+AmoeboidErrorCode on_unload_detach() {
     D::info("Uninitializing {} (Unload)", MOD_NAME);
     // Try to gracefully remove our hooks if this dll was ejected by an external tool (e.g. via System Informer).
     if(!SFunctionHookRegistry::uninstall_hooks_all(true)) {
-        return AmeboidErrorCode::FailedToUnhook;
+        return AmoeboidErrorCode::FailedToUnhook;
     }
-    return AmeboidErrorCode::Success;
+    return AmoeboidErrorCode::Success;
 }
 
-AmeboidErrorCode on_exitprocess_detach() {
+AmoeboidErrorCode on_exitprocess_detach() {
     D::info("Uninitializing {} (ExitProcess)", MOD_NAME);
     // May as well clean up resources properly, even if the process is going down.
     // Remove hooks, but don't fail if the API is unable to uninstall hooks.
     if(!SFunctionHookRegistry::uninstall_hooks_all(false)) {
-        return AmeboidErrorCode::FailedToUnhook;
+        return AmoeboidErrorCode::FailedToUnhook;
     }
-    return AmeboidErrorCode::Success;
+    return AmoeboidErrorCode::Success;
 }
 
-void on_error(bool is_detach, AmeboidErrorCode error_code) {
+void on_error(bool is_detach, AmoeboidErrorCode error_code) {
     std::string user_facing_error_message = get_user_facing_error_message(error_code);
     if(is_detach) {
         D::error("An unrecoverable error occurred during uninitialization.");
@@ -173,7 +173,7 @@ BOOL WINAPI DllMain(
         return TRUE;
     }
 
-    AmeboidErrorCode error_code = AmeboidErrorCode::Success;
+    AmoeboidErrorCode error_code = AmoeboidErrorCode::Success;
 
     // Perform actions based on the reason for calling.
     switch(fdwReason) {
@@ -209,7 +209,7 @@ BOOL WINAPI DllMain(
             break;
     }
 
-    if(error_code != AmeboidErrorCode::Success) {
+    if(error_code != AmoeboidErrorCode::Success) {
         on_error(fdwReason == DLL_PROCESS_DETACH, error_code);
     }
 

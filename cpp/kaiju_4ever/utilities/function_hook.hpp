@@ -352,7 +352,7 @@ public:
                         reinterpret_cast<void *>(this->detour),
                         reinterpret_cast<void **>(&this->orig),
                         10,
-                        "polymeric.amoeba"
+                        "polymeric.kaiju_4ever"
                     ) == 0) {
                         return false;
                     }
