@@ -2,6 +2,8 @@
 
 ![preview](preview.png)
 
+[Nexus Mods](https://www.nexusmods.com/mewgenics/mods/328) | [GitHub](https://github.com/p0lymeric/mewgenics_kaiju_4ever)
+
 ## Use
 
 Makes it so that a kaiju is always present in the background of the house, even on a fresh save and after unlocking the Rift!
@@ -34,7 +36,7 @@ To compile the dll from source, [CMake](https://cmake.org/) and a contemporary v
 
 Developers may appreciate that this dll can be injected standalone with the tool provided under `cpp/cosmic_ooze`, or another tool such as Cheat Engine or System Informer. Players should use Mewjector.
 
-## Licensing
+## Credits/Licensing
 
 Credits to JamJuice in the Mewgenics modding discord for the idea!
 
