@@ -91,7 +91,7 @@ AmoeboidErrorCode on_attach() {
     D::info("config_true_to_hide_kaiju_false_to_show_kaiju: {}", G.config_true_to_hide_kaiju_false_to_show_kaiju);
     D::info("config_true_for_zaratana_false_for_pyrophina: {}", G.config_true_for_zaratana_false_for_pyrophina);
     // D::info("Hook base VA: 0x{:x}", G.dll_base_va);
-    // D::info("Hook mapped size: 0x{:x}\n", G.dll_image_size);
+    // D::info("Hook mapped size: {}\n", G.dll_image_size);
     // D::info("Executable base VA: 0x{:x}", host_exec_base_va);
     // D::info("Executable mapped size: {}\n", host_exec_image_size);
 
