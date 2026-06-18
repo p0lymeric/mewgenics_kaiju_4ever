@@ -25,7 +25,6 @@
 const WCHAR TARGET_EXE_NAME[] = L"Mewgenics.exe";
 const WCHAR TARGET_STEAM_APP_ID[] = L"686060";
 const WCHAR DLL_NAME[] = L"kaiju_4ever.dll";
-const WCHAR DLL_NAME2[] = L"kaiju_never.dll";
 
 bool try_hook_process(DWORD pid, std::filesystem::path dll_path_relative_to_loader) {
     // LoadLibrary-based injector, for hooking existing processes
@@ -161,7 +160,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     freopen_s(&dummy_p_file, "CONOUT$", "w", stdout);
     #endif
 
-    std::wcout << std::format(L"Will attempt to hook {} (appid {}) with {}/{}\n", TARGET_EXE_NAME, TARGET_STEAM_APP_ID, DLL_NAME, DLL_NAME2);
+    std::wcout << std::format(L"Will attempt to hook {} (appid {}) with {}\n", TARGET_EXE_NAME, TARGET_STEAM_APP_ID, DLL_NAME);
 
     // Steamworks games will fork themselves if they do not know their appid and interfere with Detours injection.
     // We replicate what Steam would've done if it launched the executable by setting SteamAppId and SteamGameId.
@@ -175,11 +174,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     if(pid == 0) {
         std::wcout << std::format(L"Did not find existing process\n");
         if (std::filesystem::is_regular_file(TARGET_EXE_NAME)) {
-            if(std::filesystem::is_regular_file(DLL_NAME)) {
-                pid = try_launch_process(TARGET_EXE_NAME, DLL_NAME);
-            } else {
-                pid = try_launch_process(TARGET_EXE_NAME, DLL_NAME2);
-            }
+            pid = try_launch_process(TARGET_EXE_NAME, DLL_NAME);
             if(pid == 0) {
                 std::wcout << std::format(L"Failed to launch new process\n");
                 MessageBoxW(NULL, std::format(L"Failed to launch and hook {}", TARGET_EXE_NAME).c_str(), L"Error", MB_OK | MB_ICONEXCLAMATION);
@@ -192,13 +187,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     } else {
         std::wcout << std::format(L"Detected PID: {}\n", pid);
         if(true /* MessageBoxW(NULL, std::format(L"{} is already running. Would you like to hot-patch PID {}?", TARGET_EXE_NAME, pid).c_str(), L"Hot patch?", MB_YESNO | MB_ICONQUESTION) == IDYES */) {
-            bool successful_hook;
-            if(std::filesystem::is_regular_file(DLL_NAME)) {
-                successful_hook = try_hook_process(pid, DLL_NAME);
-            } else {
-                successful_hook = try_hook_process(pid, DLL_NAME2);
-            }
-            if(!successful_hook) {
+            if(!try_hook_process(pid, DLL_NAME)) {
                 std::wcout << std::format(L"Failed to hook PID: {}\n", pid);
                 MessageBoxW(NULL, std::format(L"Failed to hook {} PID {}", TARGET_EXE_NAME, pid).c_str(), L"Error", MB_OK | MB_ICONEXCLAMATION);
             } else {

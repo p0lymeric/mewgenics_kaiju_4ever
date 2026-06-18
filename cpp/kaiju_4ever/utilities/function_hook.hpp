@@ -7,9 +7,14 @@
 // Support function hooking via Mewjector
 #define SUPPORT_MEWJECTOR_HOOK_IMPL
 
-#include <vector>
-#include <unordered_map>
+#include "utilities/pe_view.hpp"
+
+#include <cstddef>
+#include <cstdint>
 #include <bit>
+#include <optional>
+#include <unordered_map>
+#include <vector>
 
 #include <windows.h>
 
@@ -59,6 +64,7 @@ enum class EFunctionHookProvider {
 class IFunctionHookDescriptor {
 public:
     virtual bool resolve(uintptr_t offset, size_t size) = 0;
+    virtual bool resolve(uintptr_t offset, PeView &pe_view) = 0;
     virtual bool install(EFunctionHookProvider api_provider) = 0;
     virtual bool uninstall(EFunctionHookProvider api_provider) = 0;
 };
@@ -126,6 +132,17 @@ public:
         return success;
     }
 
+    static bool resolve_hooks(uintptr_t host_exec_base_va, PeView &pe_view, int group) {
+        FunctionHookRegistryIndex &registry = SFunctionHookRegistry::get_registry(group);
+        bool success = true;
+        for(auto hook : registry.hook_descriptors) {
+            if (!hook->resolve(host_exec_base_va, pe_view)) {
+                success = false;
+            }
+        }
+        return success;
+    }
+
     static bool install_hooks(EFunctionHookProvider api_provider, int group) {
         // SFunctionHookRegistry will generally:
         // - check if the API is present if necessary
@@ -151,7 +168,7 @@ public:
                     }
                 }
                 for(auto hook : registry.hook_descriptors) {
-                    if (!hook->install(host_exec_base_va, api_provider)) {
+                    if (!hook->install(api_provider)) {
                         return false;
                     }
                 }
@@ -300,9 +317,19 @@ public:
     }
 
     virtual FP calculate_target(uintptr_t offset, size_t size) = 0;
+    virtual FP calculate_target(uintptr_t offset, PeView &pe_view) = 0;
 
     bool resolve(uintptr_t offset, size_t size) override {
         this->target = this->calculate_target(offset, size);
+        if(this->target == nullptr) {
+            // e.g. if GetProcAddress were to fail
+            return false;
+        }
+        return true;
+    }
+
+    bool resolve(uintptr_t offset, PeView &pe_view) override {
+        this->target = this->calculate_target(offset, pe_view);
         if(this->target == nullptr) {
             // e.g. if GetProcAddress were to fail
             return false;
@@ -424,6 +451,12 @@ public:
         (void)size;
         return this->target;
     }
+
+    FP calculate_target(uintptr_t offset, PeView &pe_view) override {
+        (void)offset;
+        (void)pe_view;
+        return this->target;
+    }
 };
 
 template<typename FP, bool RegisterMe, int Group>
@@ -438,6 +471,11 @@ public:
 
     FP calculate_target(uintptr_t offset, size_t size) override {
         (void)size;
+        return reinterpret_cast<FP>(this->target_canonical + offset);
+    }
+
+    FP calculate_target(uintptr_t offset, PeView &pe_view) override {
+        (void)pe_view;
         return reinterpret_cast<FP>(this->target_canonical + offset);
     }
 };
@@ -458,6 +496,13 @@ public:
         // can potentially perform cross-dll hooking by storing a wide string module name too
         return std::bit_cast<FP>(GetProcAddress(reinterpret_cast<HMODULE>(offset), this->lp_proc_name));
     }
+
+    FP calculate_target(uintptr_t offset, PeView &pe_view) override {
+        (void)pe_view;
+        // offset is an HMODULE retrieved with GetModuleHandle(NULL) outside this function
+        // can potentially perform cross-dll hooking by storing a wide string module name too
+        return std::bit_cast<FP>(GetProcAddress(reinterpret_cast<HMODULE>(offset), this->lp_proc_name));
+    }
 };
 
 template<typename FP, bool RegisterMe, int Group, typename SigClass>
@@ -471,7 +516,27 @@ public:
     {}
 
     FP calculate_target(uintptr_t offset, size_t size) override {
-        return reinterpret_cast<FP>(sig.find_unique_match_or_none(reinterpret_cast<uint8_t *>(offset), size));
+        uint8_t *result = const_cast<uint8_t *>(sig.find_unique_match_or_none(reinterpret_cast<const uint8_t *>(offset), size));
+        return reinterpret_cast<FP>(result);
+    }
+
+    FP calculate_target(uintptr_t offset, PeView &pe_view) override {
+        if(pe_view.is_opened()) {
+            std::span<const uint8_t> span = pe_view.get_file_span();
+            const uint8_t *span_data = span.data();
+            size_t span_size = span.size();
+
+            const uint8_t *result = sig.find_unique_match_or_none(span_data, span_size);
+            if(result == nullptr) {
+                return nullptr;
+            }
+
+            std::optional<uintptr_t> rva = pe_view.file_offset_to_rva(result - span_data);
+            if(rva.has_value()) {
+                return reinterpret_cast<FP>(rva.value() + offset);
+            }
+        }
+        return nullptr;
     }
 };
 

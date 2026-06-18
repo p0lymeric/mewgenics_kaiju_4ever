@@ -5,6 +5,7 @@
 #include "utilities/strings.hpp"
 #include "utilities/portal.hpp"
 #include "utilities/stopwatch.hpp"
+#include "utilities/pe_view.hpp"
 
 #include <fstream>
 
@@ -61,6 +62,10 @@ AmoeboidErrorCode on_attach() {
     G.host_exec_base_va = host_exec_base_va;
     G.host_exec_image_size = host_exec_image_size;
 
+    // Map the raw executable for hashing and signature scanning
+    PeView host_exec_pe_view;
+    host_exec_pe_view.open(get_module_file_path(NULL));
+
     // Create a Win32 console window with which to print log messages. ENABLE_CONSOLE_LOGGING disables this for public release.
     ALLOC_CONSOLE();
 
@@ -98,11 +103,11 @@ AmoeboidErrorCode on_attach() {
     {
         MAKE_STOPWATCH_SCOPE(sct, "symbol resolution");
         // Resolve portals (trampolines to functions and data)
-        if(!SPortalRegistry::resolve_portals(host_exec_base_va, host_exec_image_size)) {
+        if(!SPortalRegistry::resolve_portals(host_exec_base_va, host_exec_pe_view)) {
             return AmoeboidErrorCode::FailedToResolveSymbol;
         }
         // Resolve function hook targets
-        if(!SFunctionHookRegistry::resolve_hooks(host_exec_base_va, host_exec_image_size, 0)) {
+        if(!SFunctionHookRegistry::resolve_hooks(host_exec_base_va, host_exec_pe_view, 0)) {
             return AmoeboidErrorCode::FailedToResolveSymbol;
         }
     }

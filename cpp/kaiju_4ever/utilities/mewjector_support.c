@@ -17,7 +17,7 @@ BOOL CALLBACK MJ_SUPPORT_PRIVATE_Resolve(PINIT_ONCE InitOnce, PVOID Parameter, P
     (void)InitOnce;
     (void)Parameter;
     (void)lpContext;
-    s_mj_api_present = (MJ_Resolve(&s_mj_api) != 0);
+    s_mj_api_present = (!MJ_Require("polymeric.kaiju_4ever") || !MJ_Resolve(&s_mj_api));
 
     return TRUE;
 }

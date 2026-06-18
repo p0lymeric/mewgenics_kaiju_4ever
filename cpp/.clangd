@@ -5,9 +5,7 @@ CompileFlags:
         - -Wpedantic
         # The presence of compile_flags.txt encourages clangd to interpret these paths relative to workspace root
         - -Ilib/Detours/third_party
-        - -Ilib/libtomcrypt/third_party
         - -Ilib/mewjector/third_party
-        - -Ilib/SDL/third_party
 
 Diagnostics:
     Includes:
