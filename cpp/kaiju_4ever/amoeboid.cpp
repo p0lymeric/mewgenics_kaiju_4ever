@@ -68,19 +68,19 @@ AmoeboidErrorCode on_attach() {
     // (hacky configuration system)
     std::filesystem::path dll_path = get_module_file_path(reinterpret_cast<HMODULE>(G.dll_base_va));
     std::string dll_stem = dll_path.stem().string();
-    G.config_true_to_hide_kaiju_false_to_show_kaiju = false;
-    G.config_true_for_zaratana_false_for_pyrophina = false;
+    G.kaiju_setting = KaijuSetting::Pyrophina;
     {
         std::ifstream simple_config_file(dll_path.parent_path() / "kaiju_4ever.txt");
         if(simple_config_file.is_open()) {
             std::string first_line;
             std::getline(simple_config_file, first_line);
-            if(first_line.find("never") != std::string::npos) {
-                // *gasp*, how could you!
-                G.config_true_to_hide_kaiju_false_to_show_kaiju = true;
-            }
             if(first_line.find("zaratana") != std::string::npos) {
-                G.config_true_for_zaratana_false_for_pyrophina = true;
+                G.kaiju_setting = KaijuSetting::Zaratana;
+            } else if(first_line.find("never") != std::string::npos) {
+                // *gasp*, how could you!
+                G.kaiju_setting = KaijuSetting::Never;
+            } else if(first_line.find("auto") != std::string::npos) {
+                G.kaiju_setting = KaijuSetting::Auto;
             }
             // otherwise pyrophina will be shown
         }
@@ -88,8 +88,7 @@ AmoeboidErrorCode on_attach() {
     }
 
     D::info("Initializing {} version {}", MOD_NAME, MOD_VERSION);
-    D::info("config_true_to_hide_kaiju_false_to_show_kaiju: {}", G.config_true_to_hide_kaiju_false_to_show_kaiju);
-    D::info("config_true_for_zaratana_false_for_pyrophina: {}", G.config_true_for_zaratana_false_for_pyrophina);
+    D::info("kaiju_setting: {}", kaiju_setting_to_string(G.kaiju_setting));
     // D::info("Hook base VA: 0x{:x}", G.dll_base_va);
     // D::info("Hook mapped size: {}\n", G.dll_image_size);
     // D::info("Executable base VA: 0x{:x}", host_exec_base_va);

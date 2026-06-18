@@ -6,14 +6,15 @@
 
 ## Use
 
-Makes it so that a kaiju is always present in the background of the house, even on a fresh save and after unlocking the Rift!
+Makes it so that the kaiju you've picked remains in the background of the house, even after unlocking the Rift!
 
 This mod only affects rendering logic, and should have no permanent effects on a save.
 
-Three downloads are provided for convenience, differing in a text value stored in `config.txt`. Only one should be loaded at a given time.
-* Pyrophina fans should download kaiju_4ever_pyrophina-*.zip, which forces Pyrophina to always appear.
-* Zaratana fans should download kaiju_4ever_zaratana-*.zip, which forces Zaratana to always appear.
-* Team Rocket fans could download kaiju_never-*.zip, which instead prevents any kaiju from appearing behind the house.
+Four downloads are provided for convenience, differing in a configuration value stored in `kaiju_4ever.txt`. Only one should be loaded at a time.
+* **kaiju_4ever-*.zip** keeps the winning kaiju from Pyrophina vs. Zaratana behind the house after unlocking the Rift.
+* **kaiju_4ever_pyrophina-*.zip** forces Pyrophina to always appear, even on a fresh save and after unlocking the Rift.
+* **kaiju_4ever_zaratana-*.zip** forces Zaratana to always appear, even on a fresh save and after unlocking the Rift.
+* **kaiju_never-*.zip** prevents any kaiju from appearing behind the house.
 
 ## Installation requirements
 
@@ -21,7 +22,7 @@ This mod is packaged for the [Mewtator](https://www.nexusmods.com/mewgenics/mods
 
 Both are highly recommended for a standard install.
 
-If you encounter crashes or cannot trigger item shuffling, please verify:
+If you encounter crashes or cannot see the kaiju, please verify:
 * the version of Mewgenics you have installed matches the required version specified in this mod's release notes.
 * you have the latest versions of [Mewtator](https://www.nexusmods.com/mewgenics/mods/1) and [Mewjector](https://www.nexusmods.com/mewgenics/mods/218) installed.
 * you have dll mod support enabled in Mewtator.

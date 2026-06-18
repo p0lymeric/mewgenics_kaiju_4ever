@@ -30,6 +30,11 @@ inline constexpr const auto DATAOFF_glaiel__MewDirector__p_singleton = IndirectS
 
 // TLS variable offsets are encoded relative to the base VA of their TLS slot
 
+// Structure offsets are encoded relative to structure base
+inline const ptrdiff_t MEWDIRECTOR_PROPERTIES_OFFSET = 0x38; // TODO write a verifier to ensure that this offset has not likely moved
+inline const ptrdiff_t MEWDIRECTOR_GLOBALPROGRESSIONDATA_OFFSET = 0x5a8;
+inline const ptrdiff_t GLOBALPROGRESSIONDATA_KAIJU_NAME_OFFSET = 0x4b8;
+
 // CROSS-TU DECLARATIONS
 
 // The "everything" struct
@@ -38,6 +43,26 @@ struct GlobalContext;
 extern GlobalContext G;
 
 // TYPE DECLARATIONS
+enum class KaijuSetting {
+    Pyrophina,
+    Zaratana,
+    Never,
+    Auto,
+};
+
+inline std::string kaiju_setting_to_string(KaijuSetting level) {
+    switch(level) {
+        case KaijuSetting::Pyrophina:
+            return "Pyrophina";
+        case KaijuSetting::Zaratana:
+            return "Zaratana";
+        case KaijuSetting::Never:
+            return "Never";
+        case KaijuSetting::Auto:
+            return "Auto";
+    }
+    return "Unknown";
+}
 
 struct GlobalContext {
     // amoeboid.dll offset.
@@ -53,6 +78,5 @@ struct GlobalContext {
     bool dll_can_self_eject;
 
     // Configuration
-    bool config_true_to_hide_kaiju_false_to_show_kaiju;
-    bool config_true_for_zaratana_false_for_pyrophina;
+    KaijuSetting kaiju_setting;
 };

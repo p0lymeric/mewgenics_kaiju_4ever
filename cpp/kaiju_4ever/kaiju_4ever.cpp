@@ -4,7 +4,7 @@
 #include "utilities/function_hook.hpp"
 #include "utilities/portal.hpp"
 
-// Makes it so that the kaiju you've picked in your save remains in the
+// Makes it so that the kaiju you've picked remains in the
 // background of the house, even after unlocking the Rift!
 //
 // polymeric 2026
@@ -34,7 +34,11 @@ MAKE_SHOOK(0, ADDRESS_maybe_get_sql_properties_int64,
     if(P.override_properties_mapflag_DimensionXUnlocked) {
         if(key_clone == "mapflag_DimensionXUnlocked") {
             // D::debug("query for mapflag_DimensionXUnlocked");
-            return G.config_true_to_hide_kaiju_false_to_show_kaiju ? 1 : 0;
+            if(G.kaiju_setting == KaijuSetting::Never) {
+                result = 1;
+            } else {
+                result = 0;
+            }
         }
     }
 
@@ -46,23 +50,55 @@ MAKE_SHOOK(0, ADDRESS_glaiel__BackgroundKaiju__unlocked_update,
     void *thiss
 ) {
     // D::debug("kaiju unlocked_update");
-    if(G.config_true_to_hide_kaiju_false_to_show_kaiju) {
+    if(G.kaiju_setting == KaijuSetting::Never) {
+        // Override mapflag_DimensionXUnlocked to 1 to force the game to hide the kaiju
         P.override_properties_mapflag_DimensionXUnlocked = true;
         glaiel__BackgroundKaiju__unlocked_update_hook.orig(thiss);
         P.override_properties_mapflag_DimensionXUnlocked = false;
     } else {
-        uint8_t *p_md = get_p_mewdirector_singleton();
+        uint8_t *p_mewdirector = get_p_mewdirector_singleton();
         // Safety note: these hardcoded offsets are verified as part of signature scanning for ADDRESS_glaiel__BackgroundKaiju__unlocked_update
         // so we can be confident here that we are modifying the memory we expect.
-        uint8_t *p_md_plus_0x5a8 = *reinterpret_cast<uint8_t **>(p_md + 0x5a8);
-        MsvcReleaseModeXString *kaiju_name = reinterpret_cast<MsvcReleaseModeXString *>(p_md_plus_0x5a8 + 0x4b8);
+        uint8_t *p_globalprogressiondata = *reinterpret_cast<uint8_t **>(p_mewdirector + MEWDIRECTOR_GLOBALPROGRESSIONDATA_OFFSET);
+        MsvcReleaseModeXString *kaiju_name = reinterpret_cast<MsvcReleaseModeXString *>(p_globalprogressiondata + GLOBALPROGRESSIONDATA_KAIJU_NAME_OFFSET);
         // D::debug("kaiju {}", kaiju_name->as_native_string_view());
         std::string kaiju_name_clone = kaiju_name->copy_to_native_string();
 
         // Now we override the field in memory that stores which kaiju was chosen by the player
-        // The game checks this string every frame to know if it should draw Pyrophina or Zatatana or nothing as the background kaiju
-        kaiju_name->destroy();
-        kaiju_name->construct(G.config_true_for_zaratana_false_for_pyrophina ? "zaratana" : "pyrophina");
+        // The game checks this string every frame to know if it should draw Pyrophina or Zaratana or nothing as the background kaiju
+        switch(G.kaiju_setting) {
+            case KaijuSetting::Pyrophina:
+                // Always show Pyrophina
+                kaiju_name->destroy();
+                kaiju_name->construct("pyrophina");
+                break;
+            case KaijuSetting::Zaratana:
+                // Always show Zaratana
+                kaiju_name->destroy();
+                kaiju_name->construct("zaratana");
+                break;
+            default: // case KaijuSetting::Auto:
+                // In Auto mode, we start displaying the kaiju chosen after Pyrophina vs. Zaratana
+                // and ensure they continue to be displayed after the Rift is unlocked.
+                // When a save unlocks the Rift, the game clears the kaiju field in GlobalProgressionData
+                // but writes a SQL flag into the properties table. We read those flags and
+                // override the GlobalProgressionData value to match.
+                uint8_t *p_properties = *reinterpret_cast<uint8_t **>(p_mewdirector + MEWDIRECTOR_PROPERTIES_OFFSET);
+                MsvcReleaseModeXString sql_key = {};
+                sql_key.construct("TheRift_UsedPyrophina");
+                if(maybe_get_sql_properties_int64_hook.target(p_properties, &sql_key, 0)) { // destroys sql_key
+                    kaiju_name->destroy();
+                    kaiju_name->construct("pyrophina");
+                    break;
+                }
+                sql_key.construct("TheRift_UsedZaratana");
+                if(maybe_get_sql_properties_int64_hook.target(p_properties, &sql_key, 0)) { // destroys sql_key
+                    kaiju_name->destroy();
+                    kaiju_name->construct("zaratana");
+                    break;
+                }
+                break;
+        }
 
         // We then must override mapflag_DimensionXUnlocked to 0 so that the game does not hide the kaiju
         P.override_properties_mapflag_DimensionXUnlocked = true;
