@@ -7,6 +7,9 @@
 // Support function hooking via Mewjector
 #define SUPPORT_MEWJECTOR_HOOK_IMPL
 
+// Use Detours' disassembler to measure stolenBytes for Mewjector
+#define COMPAT_MEWJECTOR_MEASURE_STOLENBYTES
+
 #include "utilities/pe_view.hpp"
 
 #include <cstddef>
@@ -365,6 +368,7 @@ public:
             #ifdef SUPPORT_MEWJECTOR_HOOK_IMPL
             case EFunctionHookProvider::Mewjector:
                 if(const MewjectorAPI *mj = MJ_SUPPORT_GetAPI(); mj != NULL) {
+                    #ifdef COMPAT_MEWJECTOR_MEASURE_STOLENBYTES
                     // Versions of Mewjector prior to v3.1 required an externally calculated value for stolenBytes
                     const size_t MIN_BYTES_TO_STEAL = 14;
                     uintptr_t target_start = reinterpret_cast<uintptr_t>(this->target);
@@ -374,13 +378,16 @@ public:
                         target_end_of_stolen_region = reinterpret_cast<uintptr_t>(target_end_of_stolen_region_void);
                     }
                     int bytes_to_steal = static_cast<int>(target_end_of_stolen_region - target_start);
+                    #else
+                    int bytes_to_steal = 0;
+                    #endif
                     if(mj->InstallHook(
                         reinterpret_cast<UINT_PTR>(this->target) - reinterpret_cast<UINT_PTR>(GetModuleHandle(NULL)),
                         bytes_to_steal,
                         reinterpret_cast<void *>(this->detour),
                         reinterpret_cast<void **>(&this->orig),
                         10,
-                        "polymeric.kaiju_4ever"
+                        MJ_SUPPORT_GetOwner()
                     ) == 0) {
                         return false;
                     }
