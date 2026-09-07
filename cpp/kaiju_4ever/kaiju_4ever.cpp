@@ -91,7 +91,7 @@ MAKE_SHOOK(0, ADDRESS_glaiel__BackgroundKaiju__unlocked_update,
                 // override the GlobalProgressionData value to match.
                 // (Safety note: p_properties' offset was verified by scanning for verify_glaiel__MewDirector__properties
                 // so we can be confident that we are accessing the memory we expect.)
-                uint8_t *p_properties = *reinterpret_cast<uint8_t **>(p_mewdirector + MEWDIRECTOR_PROPERTIES_OFFSET);
+                uint8_t *p_properties = p_mewdirector + MEWDIRECTOR_PROPERTIES_OFFSET;
                 MsvcReleaseModeXString sql_key = {};
                 sql_key.construct("TheRift_UsedPyrophina");
                 if(maybe_get_sql_properties_int64_hook.target(p_properties, &sql_key, 0)) { // destroys sql_key
