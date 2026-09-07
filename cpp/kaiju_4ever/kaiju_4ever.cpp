@@ -15,6 +15,12 @@ struct PrivateState {
 
 static PrivateState P;
 
+[[maybe_unused]] static void *&verify_glaiel__GlobalProgressionData__kaiju_name();
+MAKE_SDPORTAL(VERIFY_glaiel__GlobalProgressionData__kaiju_name, void *, verify_glaiel__GlobalProgressionData__kaiju_name);
+
+[[maybe_unused]] static void *&verify_glaiel__MewDirector__properties();
+MAKE_SDPORTAL(VERIFY_glaiel__MewDirector__properties, void *, verify_glaiel__MewDirector__properties);
+
 MAKE_SDPORTAL(DATAOFF_glaiel__MewDirector__p_singleton,
     uint8_t *, get_p_mewdirector_singleton
 )
@@ -57,8 +63,8 @@ MAKE_SHOOK(0, ADDRESS_glaiel__BackgroundKaiju__unlocked_update,
         P.override_properties_mapflag_DimensionXUnlocked = false;
     } else {
         uint8_t *p_mewdirector = get_p_mewdirector_singleton();
-        // Safety note: these hardcoded offsets are verified as part of signature scanning for ADDRESS_glaiel__BackgroundKaiju__unlocked_update
-        // so we can be confident here that we are modifying the memory we expect.
+        // Safety note: p_globalprogressiondata's offset was verified by scanning for VERIFY_glaiel__GlobalProgressionData__kaiju_name
+        // so we can be confident that we are modifying the memory we expect.
         uint8_t *p_globalprogressiondata = *reinterpret_cast<uint8_t **>(p_mewdirector + MEWDIRECTOR_GLOBALPROGRESSIONDATA_OFFSET);
         MsvcReleaseModeXString *kaiju_name = reinterpret_cast<MsvcReleaseModeXString *>(p_globalprogressiondata + GLOBALPROGRESSIONDATA_KAIJU_NAME_OFFSET);
         // D::debug("kaiju {}", kaiju_name->as_native_string_view());
@@ -83,6 +89,8 @@ MAKE_SHOOK(0, ADDRESS_glaiel__BackgroundKaiju__unlocked_update,
                 // When a save unlocks the Rift, the game clears the kaiju field in GlobalProgressionData
                 // but writes a SQL flag into the properties table. We read those flags and
                 // override the GlobalProgressionData value to match.
+                // (Safety note: p_properties' offset was verified by scanning for verify_glaiel__MewDirector__properties
+                // so we can be confident that we are accessing the memory we expect.)
                 uint8_t *p_properties = *reinterpret_cast<uint8_t **>(p_mewdirector + MEWDIRECTOR_PROPERTIES_OFFSET);
                 MsvcReleaseModeXString sql_key = {};
                 sql_key.construct("TheRift_UsedPyrophina");
